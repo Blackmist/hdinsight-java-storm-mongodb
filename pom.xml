@@ -1,0 +1,114 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.microsoft.example</groupId>
+  <artifactId>CosmosDBMongoDBAPI</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0-SNAPSHOT</version>
+  <name>CosmosDBMongoDBExample</name>
+  <url>http://maven.apache.org</url>
+  <properties>
+    <!--
+    Storm 1.1.0 is for HDInsight 3.6.
+    To find the version information for earlier HDInsight cluster
+    versions, see https://azure.microsoft.com/en-us/documentation/articles/hdinsight-component-versioning/
+    -->
+    <storm.version>1.1.0</storm.version>
+    <hadoop.version>2.7.3</hadoop.version>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.storm</groupId>
+      <artifactId>storm-core</artifactId>
+      <version>${storm.version}</version>
+      <!-- keep storm out of the jar-with-dependencies -->
+      <scope>provided</scope>
+    </dependency>
+    <!-- Flux, for YAML based topologies -->
+    <dependency>
+      <groupId>org.apache.storm</groupId>
+      <artifactId>flux-core</artifactId>
+      <version>${storm.version}</version>
+    </dependency>
+    <!--For working with Mongo DB-->
+    <dependency>
+        <groupId>org.apache.storm</groupId>
+        <artifactId>storm-mongodb</artifactId>
+        <version>1.1.0</version>
+        <!-- exclude the default version, as it doesn't support SSL and other things -->
+        <!--<exclusions>-->
+          <!--<exclusion>-->
+            <!--<groupId>org.mongodb</groupId>-->
+            <!--<artifactId>mongodb-driver-core</artifactId>-->
+          <!--</exclusion>-->
+        <!--</exclusions>-->
+    </dependency>
+    <!-- include a newer version of the driver for SSL, etc. -->
+    <!--<dependency>-->
+      <!--<groupId>org.mongodb</groupId>-->
+      <!--<artifactId>mongodb-driver-core</artifactId>-->
+      <!--&lt;!&ndash; CosmosDB implements MongoDB API ver 3.4 so maybe this? &ndash;&gt;-->
+      <!--<version>3.6.0</version>-->
+    <!--</dependency>-->
+  </dependencies>
+  <build>
+    <plugins>
+      <!-- build for Java 1.8, which is what HDInsight 3.5 and higher uses -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+      <!-- build an uber jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.3</version>
+        <configuration>
+          <transformers>
+            <!-- Keep us from getting a can't overwrite file error -->
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
+            <!-- Keep us from getting errors when trying to use WASB from the storm-hdfs bolt -->
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+          </transformers>
+          <!-- Keep us from getting a bad signature error -->
+          <filters>
+        <filter>
+            <artifact>*:*</artifact>
+            <excludes>
+                <exclude>META-INF/*.SF</exclude>
+                <exclude>META-INF/*.DSA</exclude>
+                <exclude>META-INF/*.RSA</exclude>
+            </excludes>
+        </filter>
+    </filters>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <!-- Tell the project about the configuration files For
+         Event Hub and the Azure Storage account -->
+    <resources>
+      <resource>
+        <directory>${basedir}/resources</directory>
+        <filtering>false</filtering>
+        <!-- include the topology definitions & logging config -->
+        <includes>
+          <include>writer.yaml</include>
+          <include>log4j2.xml</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+</project>

@@ -1,0 +1,34 @@
+---
+# Topology that reads from Event Hubs
+name: "mongodbwriter"
+
+components:
+  # MongoDB mapper
+  - id: "mongodb-mapper"
+    className: "org.apache.storm.mongodb.common.mapper.SimpleMongoMapper"
+    configMethods:
+      - name: "withFields"
+        args: # The following are the tuple fields to map to a MongoDB document
+          - ["temperature", "humidity", "co2level"]
+
+spouts:
+  - id: "device-emulator-spout"
+    className: "com.microsoft.example.DeviceSpout"
+    parallelism: 1
+
+bolts:
+  - id: "mongodb-bolt"
+    className: "org.apache.storm.mongodb.bolt.MongoInsertBolt"
+    constructorArgs:
+      - "${mongodb.url}"
+      - "${mongodb.collection.name}"
+      - ref: "mongodb-mapper"
+    parallelism: 1
+
+# How data flows through the components
+streams:
+  - name: "spout -> cosmosdb (mongodb api)" # just a string used for logging
+    from: "device-emulator-spout"
+    to: "mongodb-bolt"
+    grouping:
+        type: SHUFFLE
