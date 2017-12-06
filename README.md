@@ -18,20 +18,20 @@ To make this work, you'll need:
 
 The `resources/writer.yaml` topology emits random weather data (temperature, humidity, co2 level). This is passed to the storm-mongodb bolt, which writes it to the Mongo DB API exposed by Cosmos DB on Azure.
 
+The args for the mongodb-mapper component sets the tuple fields that you want to be inserted into MongoDB. These are used to create the document that is inserted. If you're adapting this to your own solution, you'll need to adjust these.
+
 ## Confgure and build
 
 1. Fork & clone the repository so you have a local copy.
 
-2. In the `writer.yaml` file, change the args for the mongodb-mapper component to the tuple fields that you want to be inserted into MongoDB. These are used to create the document that is inserted.
-
-3. In the `dev.properties` file, change the `mongodb.url` to the connection string for Cosmos DB. Also change the `mongodb.collection.name` to the name of the collection.
+2. In the `dev.properties` file, change the `mongodb.url` to the connection string for Cosmos DB. Also change the `mongodb.collection.name` to the name of the collection.
 
     IMPORTANT!
 
     You have to modify the connection string to specify the database. This is apparently the only way you can specify the database to the storm-mongodb component. Add the database name between `/?` at the end of the connection string. For example, `...documents.azure.com:10255/mydatabase?ssl-true...`
 
 
-4. Use `mvn package` to build everything.
+3. Use `mvn package` to build everything.
 
     Once the build completes, the `target` directory will contain a file named `CosmosDBMongoDBAPI-1.0-SNAPSHOT.jar`.
 
